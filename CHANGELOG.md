@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## 0.8.0 - 2026-02-21
 
+We're excited to announce the first version of **ratatui-textarea**! (fork of `tui-textarea`)
+
+Migrating from `tui-textarea`:
+
+```diff
+[dependencies]
+-tui-textarea = 0.7.0
++ratatui-textarea = 0.8.0
+```
+
 ### 🚀 Features
 
 - [**breaking**] Remove tui-rs support and update ratatui to 0.30.0 by @dotdash in [#3](https://github.com/ratatui/ratatui-textarea/pull/3)
