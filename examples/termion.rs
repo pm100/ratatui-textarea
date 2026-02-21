@@ -1,16 +1,17 @@
-use ratatui::backend::TermionBackend;
-use ratatui::widgets::{Block, Borders};
-use ratatui::Terminal;
+use ratatui_core::terminal::Terminal;
+use ratatui_termion::TermionBackend;
+use ratatui_termion::termion::event::Event as TermEvent;
+use ratatui_termion::termion::input::{MouseTerminal, TermRead};
+use ratatui_termion::termion::raw::IntoRawMode;
+use ratatui_termion::termion::screen::IntoAlternateScreen;
 use ratatui_textarea::{Input, Key, TextArea};
+use ratatui_widgets::block::Block;
+use ratatui_widgets::borders::Borders;
 use std::error::Error;
 use std::io;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
-use termion::event::Event as TermEvent;
-use termion::input::{MouseTerminal, TermRead};
-use termion::raw::IntoRawMode;
-use termion::screen::IntoAlternateScreen;
 
 enum Event {
     Term(TermEvent),
@@ -32,9 +33,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 keys_tx.send(Event::Term(event)).unwrap();
             }
         });
-        thread::spawn(move || loop {
-            tx.send(Event::Tick).unwrap();
-            thread::sleep(Duration::from_millis(100));
+        thread::spawn(move || {
+            loop {
+                tx.send(Event::Tick).unwrap();
+                thread::sleep(Duration::from_millis(100));
+            }
         });
         rx
     };

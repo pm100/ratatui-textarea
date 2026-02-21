@@ -1,13 +1,8 @@
-use crate::ratatui::style::Style;
-use crate::ratatui::text::Span;
 use crate::util::{num_digits, spaces};
-#[cfg(feature = "ratatui")]
-use ratatui::text::Line;
+use ratatui_core::style::Style;
+use ratatui_core::text::{Line, Span};
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::iter;
-#[cfg(feature = "tuirs")]
-use tui::text::Spans as Line;
 use unicode_width::UnicodeWidthChar as _;
 
 enum Boundary {
@@ -61,7 +56,7 @@ impl DisplayTextBuilder {
     fn build<'s>(&mut self, s: &'s str) -> Cow<'s, str> {
         if let Some(ch) = self.mask {
             // Note: We don't need to track width on masking text since width of tab character is fixed
-            let masked = iter::repeat(ch).take(s.chars().count()).collect();
+            let masked = std::iter::repeat_n(ch, s.chars().count()).collect();
             return Cow::Owned(masked);
         }
 
@@ -252,10 +247,10 @@ impl<'a> LineHighlighter<'a> {
 }
 
 // Tests for spans don't work with tui-rs
-#[cfg(all(test, feature = "ratatui"))]
+#[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ratatui::style::Color;
+    use ratatui_core::style::Color;
     use std::fmt::Debug;
     use unicode_width::UnicodeWidthStr as _;
 
