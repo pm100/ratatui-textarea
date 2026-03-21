@@ -1,6 +1,7 @@
 use crate::textarea::TextArea;
 use crate::util::num_digits;
 use ratatui_core::buffer::Buffer;
+use unicode_width::UnicodeWidthChar;
 use ratatui_core::layout::Rect;
 use ratatui_core::text::{Line, Span, Text};
 use ratatui_core::widgets::Widget;
@@ -111,7 +112,13 @@ impl<'a> TextArea<'a> {
     }
 
     fn scroll_top_col(&self, prev_top: u16, width: u16) -> u16 {
-        let mut cursor = self.cursor().1 as u16;
+        let (row, col) = self.cursor();
+        // Adjust the cursor position to account for the display width of non-ASCII characters.
+        let mut cursor = self.lines()[row]
+            .chars()
+            .take(col)
+            .map(|c| c.width().unwrap_or(0))
+            .sum::<usize>() as u16;
         // Adjust the cursor position due to the width of line number.
         if self.line_number_style().is_some() {
             let lnum = num_digits(self.lines().len()) as u16 + 2; // `+ 2` for margins
