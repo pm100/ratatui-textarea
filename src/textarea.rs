@@ -9,8 +9,8 @@ use crate::util::{Pos, spaces};
 use crate::widget::Viewport;
 use crate::word::{find_word_exclusive_end_forward, find_word_start_backward};
 use ratatui_core::layout::Alignment;
-use ratatui_core::style::{Color, Modifier, Style};
-use ratatui_core::text::Line;
+use ratatui_core::style::{Color, Modifier, Style, Stylize};
+use ratatui_core::text::{Line, Text};
 use ratatui_core::widgets::Widget;
 use ratatui_widgets::block::Block;
 use std::cmp::Ordering;
@@ -118,8 +118,7 @@ pub struct TextArea<'a> {
     #[cfg(feature = "search")]
     search: Search,
     alignment: Alignment,
-    pub(crate) placeholder: String,
-    pub(crate) placeholder_style: Style,
+    pub(crate) placeholder: Text<'a>,
     mask: Option<char>,
     selection_start: Option<(usize, usize)>,
     select_style: Style,
@@ -223,8 +222,7 @@ impl<'a> TextArea<'a> {
             #[cfg(feature = "search")]
             search: Search::default(),
             alignment: Alignment::Left,
-            placeholder: String::new(),
-            placeholder_style: Style::default().fg(Color::DarkGray),
+            placeholder: Text::default().fg(Color::DarkGray),
             mask: None,
             selection_start: None,
             select_style: Style::default().bg(Color::LightBlue),
@@ -1867,13 +1865,15 @@ impl<'a> TextArea<'a> {
     /// assert_eq!(textarea.placeholder_text(), "Hello");
     /// assert!(textarea.placeholder_style().is_some());
     /// ```
+    #[deprecated = "Placeholder is now Text, so this method removes styling of individual spans. Please use set_placeholder"]
     pub fn set_placeholder_text(&mut self, placeholder: impl Into<String>) {
-        self.placeholder = placeholder.into();
+        let placeholder: String = placeholder.into();
+        self.placeholder.lines = vec![Line::raw(placeholder)];
     }
 
     /// Set the style of the placeholder text. The default style is a dark gray text.
     /// ```
-    /// use ratatui::style::{Style, Color};
+    /// use ratatui_core::style::{Style, Color};
     /// use ratatui_textarea::TextArea;
     ///
     /// let mut textarea = TextArea::default();
@@ -1885,8 +1885,34 @@ impl<'a> TextArea<'a> {
     /// textarea.set_placeholder_style(style);
     /// assert_eq!(textarea.placeholder_style(), Some(style));
     /// ```
+    #[deprecated = "Please use set_placeholder with a styled Text value"]
     pub fn set_placeholder_style(&mut self, style: Style) {
-        self.placeholder_style = style;
+        self.placeholder.style = style;
+    }
+
+    /// Get the placeholder. The placeholder is shown when the textarea is empty.
+    /// ```
+    /// use ratatui_textarea::TextArea;
+    ///
+    /// let mut textarea = TextArea::default();
+    /// textarea.set_placeholder("Hello");
+    /// assert_eq!(textarea.placeholder().lines[0].spans[0].content, "Hello");
+    /// ```
+    pub fn placeholder(&self) -> &Text<'_> {
+        &self.placeholder
+    }
+
+    /// Set the placeholder as a styled [`ratatui_core::text::Text`] value. The placeholder is shown when the textarea
+    /// is empty. Accepts anything that converts into `Text`: a plain `&str`, a styled `Line`, or a full `Text`.
+    /// ```
+    /// use ratatui_textarea::TextArea;
+    ///
+    /// let mut textarea = TextArea::default();
+    /// textarea.set_placeholder("Enter your message");
+    /// assert!(!textarea.placeholder().lines.is_empty());
+    /// ```
+    pub fn set_placeholder(&mut self, placeholder: impl Into<Text<'a>>) {
+        self.placeholder = placeholder.into();
     }
 
     /// Get the placeholder text. An empty string means the placeholder is disabled. The default value is an empty string.
@@ -1896,8 +1922,16 @@ impl<'a> TextArea<'a> {
     /// let textarea = TextArea::default();
     /// assert_eq!(textarea.placeholder_text(), "");
     /// ```
+    #[deprecated = "Placeholder is now Text. This method only returns the first span of the first line. Please use placeholder"]
     pub fn placeholder_text(&self) -> &'_ str {
-        self.placeholder.as_str()
+        let line = match self.placeholder.lines.first() {
+            Some(line) => line,
+            None => return "",
+        };
+        match line.spans.first() {
+            Some(span) => &span.content,
+            None => "",
+        }
     }
 
     /// Get the placeholder style. When the placeholder text is empty, it returns `None` since the placeholder is disabled.
@@ -1911,11 +1945,12 @@ impl<'a> TextArea<'a> {
     /// textarea.set_placeholder_text("hello");
     /// assert!(textarea.placeholder_style().is_some());
     /// ```
+    #[deprecated = "Please use placeholder() and access its style field"]
     pub fn placeholder_style(&self) -> Option<Style> {
-        if self.placeholder.is_empty() {
+        if self.placeholder.lines.is_empty() {
             None
         } else {
-            Some(self.placeholder_style)
+            Some(self.placeholder.style)
         }
     }
 

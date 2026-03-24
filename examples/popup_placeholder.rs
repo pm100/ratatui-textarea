@@ -35,8 +35,7 @@ fn main() -> io::Result<()> {
         y: 5,
     };
     textarea.set_style(Style::default().fg(Color::Yellow));
-    textarea.set_placeholder_style(Style::default());
-    textarea.set_placeholder_text("prompt message");
+    textarea.set_placeholder("prompt message");
     loop {
         term.draw(|f| {
             f.render_widget(&textarea, area);

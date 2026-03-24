@@ -44,7 +44,7 @@ fn main() -> io::Result<()> {
 
     let mut textarea = TextArea::default();
     textarea.set_cursor_line_style(Style::default());
-    textarea.set_placeholder_text("Enter a valid float (e.g. 1.56)");
+    textarea.set_placeholder("Enter a valid float (e.g. 1.56)");
     let layout = Layout::default().constraints([Constraint::Length(3), Constraint::Min(1)]);
     let mut is_valid = validate(&mut textarea);
 
