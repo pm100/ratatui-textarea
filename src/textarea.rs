@@ -1556,7 +1556,9 @@ impl<'a> TextArea<'a> {
     pub fn undo(&mut self) -> bool {
         if let Some(cursor) = self.history.undo(&mut self.lines) {
             self.cancel_selection();
-            self.cursor = cursor;
+            let row = cursor.0.min(self.lines.len().saturating_sub(1));
+            let col = cursor.1.min(self.lines[row].chars().count());
+            self.cursor = (row, col);
             true
         } else {
             false
@@ -1579,7 +1581,9 @@ impl<'a> TextArea<'a> {
     pub fn redo(&mut self) -> bool {
         if let Some(cursor) = self.history.redo(&mut self.lines) {
             self.cancel_selection();
-            self.cursor = cursor;
+            let row = cursor.0.min(self.lines.len().saturating_sub(1));
+            let col = cursor.1.min(self.lines[row].chars().count());
+            self.cursor = (row, col);
             true
         } else {
             false
