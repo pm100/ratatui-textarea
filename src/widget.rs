@@ -1,12 +1,16 @@
 use crate::textarea::TextArea;
 use crate::util::num_digits;
+#[cfg(feature = "portable-atomic")]
+use portable_atomic::{AtomicU64, Ordering};
 use ratatui_core::buffer::Buffer;
 use ratatui_core::layout::Rect;
 use ratatui_core::text::{Line, Span, Text};
 use ratatui_core::widgets::Widget;
 use ratatui_widgets::paragraph::Paragraph;
 use std::cmp;
+#[cfg(not(feature = "portable-atomic"))]
 use std::sync::atomic::{AtomicU64, Ordering};
+use unicode_width::UnicodeWidthChar;
 
 // &mut 'a (u16, u16, u16, u16) is not available since `render` method takes immutable reference of TextArea
 // instance. In the case, the TextArea instance cannot be accessed from any other objects since it is mutablly
@@ -111,7 +115,13 @@ impl<'a> TextArea<'a> {
     }
 
     fn scroll_top_col(&self, prev_top: u16, width: u16) -> u16 {
-        let mut cursor = self.cursor().1 as u16;
+        let (row, col) = self.cursor();
+        // Adjust the cursor position to account for the display width of non-ASCII characters.
+        let mut cursor = self.lines()[row]
+            .chars()
+            .take(col)
+            .map(|c| c.width().unwrap_or(0))
+            .sum::<usize>() as u16;
         // Adjust the cursor position due to the width of line number.
         if self.line_number_style().is_some() {
             let lnum = num_digits(self.lines().len()) as u16 + 2; // `+ 2` for margins
@@ -161,5 +171,27 @@ impl Widget for &TextArea<'_> {
         self.viewport.store(top_row, top_col, width, height);
 
         inner.render(text_area, buf);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn viewport_store_and_load() {
+        let vp = Viewport::default();
+        vp.store(3, 7, 80, 24);
+        assert_eq!(vp.scroll_top(), (3, 7));
+        let (row, col, width, height) = vp.rect();
+        assert_eq!((row, col, width, height), (3, 7, 80, 24));
+    }
+
+    #[test]
+    fn viewport_clone() {
+        let vp = Viewport::default();
+        vp.store(5, 2, 40, 10);
+        let vp2 = vp.clone();
+        assert_eq!(vp2.scroll_top(), (5, 2));
     }
 }
