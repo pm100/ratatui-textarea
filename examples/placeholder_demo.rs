@@ -38,15 +38,23 @@ fn make_panes() -> Vec<Pane<'static>> {
 
     // --- 3. Single styled span ---
     let mut styled_span = TextArea::default();
-    styled_span.set_styled_placeholder(
-        Span::styled("Required field", Style::default().fg(Color::Red).add_modifier(Modifier::ITALIC)),
-    );
+    styled_span.set_styled_placeholder(Span::styled(
+        "Required field",
+        Style::default()
+            .fg(Color::Red)
+            .add_modifier(Modifier::ITALIC),
+    ));
     styled_span.set_block(pane_block("3. Single styled Span"));
 
     // --- 4. Multi-span line (mixed styles in one line) ---
     let mut multi_span = TextArea::default();
     multi_span.set_styled_placeholder(Line::from(vec![
-        Span::styled("Email", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "Email",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(": "),
         Span::styled("user@example.com", Style::default().fg(Color::DarkGray)),
     ]));
@@ -61,7 +69,9 @@ fn make_panes() -> Vec<Pane<'static>> {
         ),
         Line::styled(
             "Line 2: This is a multi-line placeholder",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::DIM),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::DIM),
         ),
         Line::styled(
             "Line 3: Each line styled independently",
@@ -90,14 +100,38 @@ fn make_panes() -> Vec<Pane<'static>> {
     cleared_legacy.set_block(pane_block("8. Cleared via set_placeholder_text(\"\")"));
 
     vec![
-        Pane { label: "no_placeholder",   textarea: no_placeholder },
-        Pane { label: "plain",            textarea: plain },
-        Pane { label: "styled_span",      textarea: styled_span },
-        Pane { label: "multi_span",       textarea: multi_span },
-        Pane { label: "multiline",        textarea: multiline },
-        Pane { label: "text_style",       textarea: text_style },
-        Pane { label: "legacy",           textarea: legacy },
-        Pane { label: "cleared_legacy",   textarea: cleared_legacy },
+        Pane {
+            label: "no_placeholder",
+            textarea: no_placeholder,
+        },
+        Pane {
+            label: "plain",
+            textarea: plain,
+        },
+        Pane {
+            label: "styled_span",
+            textarea: styled_span,
+        },
+        Pane {
+            label: "multi_span",
+            textarea: multi_span,
+        },
+        Pane {
+            label: "multiline",
+            textarea: multiline,
+        },
+        Pane {
+            label: "text_style",
+            textarea: text_style,
+        },
+        Pane {
+            label: "legacy",
+            textarea: legacy,
+        },
+        Pane {
+            label: "cleared_legacy",
+            textarea: cleared_legacy,
+        },
     ]
 }
 
@@ -152,7 +186,8 @@ fn main() -> io::Result<()> {
                 Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(": quit"),
             ]);
-            f.buffer_mut().set_line(help_area.x, help_area.y, &help, help_area.width);
+            f.buffer_mut()
+                .set_line(help_area.x, help_area.y, &help, help_area.width);
 
             // Lay out panes in a 4×2 grid
             let cols = Layout::default()
@@ -161,7 +196,8 @@ fn main() -> io::Result<()> {
                 .split(main_area);
 
             let rows_per_col = (n + 1) / 2;
-            let row_constraint = vec![Constraint::Percentage(100 / rows_per_col as u16); rows_per_col];
+            let row_constraint =
+                vec![Constraint::Percentage(100 / rows_per_col as u16); rows_per_col];
 
             let left_rows = Layout::default()
                 .direction(Direction::Vertical)
@@ -195,7 +231,11 @@ fn main() -> io::Result<()> {
             Input { key: Key::Esc, .. } => break,
 
             // Shift-Tab: previous pane (must come before the general Tab arm)
-            Input { key: Key::Tab, shift: true, .. } => {
+            Input {
+                key: Key::Tab,
+                shift: true,
+                ..
+            } => {
                 active = (active + n - 1) % n;
             }
             // Tab: next pane
@@ -204,7 +244,10 @@ fn main() -> io::Result<()> {
             }
 
             // r: reset pane to its original state
-            Input { key: Key::Char('r'), .. } => {
+            Input {
+                key: Key::Char('r'),
+                ..
+            } => {
                 let label = panes[active].label;
                 let new_panes = make_panes();
                 if let Some(fresh) = new_panes.into_iter().find(|p| p.label == label) {
@@ -213,8 +256,13 @@ fn main() -> io::Result<()> {
             }
 
             // c: clear the placeholder
-            Input { key: Key::Char('c'), .. } => {
-                panes[active].textarea.set_styled_placeholder(Text::default());
+            Input {
+                key: Key::Char('c'),
+                ..
+            } => {
+                panes[active]
+                    .textarea
+                    .set_styled_placeholder(Text::default());
             }
 
             // Ctrl-S: set a rich styled placeholder (must come before the plain 's' arm)
@@ -223,16 +271,33 @@ fn main() -> io::Result<()> {
                 ctrl: true,
                 ..
             } => {
-                panes[active].textarea.set_styled_placeholder(Line::from(vec![
-                    Span::styled("Rich", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-                    Span::raw(" styled "),
-                    Span::styled("placeholder", Style::default().fg(Color::Cyan).add_modifier(Modifier::ITALIC)),
-                ]));
+                panes[active]
+                    .textarea
+                    .set_styled_placeholder(Line::from(vec![
+                        Span::styled(
+                            "Rich",
+                            Style::default()
+                                .fg(Color::Green)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" styled "),
+                        Span::styled(
+                            "placeholder",
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::ITALIC),
+                        ),
+                    ]));
             }
 
             // s: set a plain string placeholder
-            Input { key: Key::Char('s'), .. } => {
-                panes[active].textarea.set_styled_placeholder("← plain string placeholder");
+            Input {
+                key: Key::Char('s'),
+                ..
+            } => {
+                panes[active]
+                    .textarea
+                    .set_styled_placeholder("← plain string placeholder");
             }
 
             // Everything else: send to the active textarea
