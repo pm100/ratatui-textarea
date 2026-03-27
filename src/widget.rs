@@ -2,7 +2,7 @@ use crate::textarea::TextArea;
 use crate::util::num_digits;
 use ratatui_core::buffer::Buffer;
 use ratatui_core::layout::Rect;
-use ratatui_core::text::Text;
+use ratatui_core::text::{Line, Span, Text};
 use ratatui_core::widgets::Widget;
 use ratatui_widgets::paragraph::Paragraph;
 use std::cmp;
@@ -120,8 +120,15 @@ impl Widget for &TextArea<'_> {
         let top_row = self.scroll_top_row(top_row, height) as usize;
         let top_col = self.scroll_top_col(top_col, width) as usize;
 
-        let text = if self.is_empty() {
-            self.placeholder().clone()
+        let text = if self.is_empty() && !self.placeholder.lines.is_empty() {
+            let mut placeholder = self.placeholder.clone();
+            let cursor = Span::styled(" ", self.cursor_style);
+            if let Some(first_line) = placeholder.lines.first_mut() {
+                first_line.spans.insert(0, cursor);
+            } else {
+                placeholder.lines.push(Line::from(vec![cursor]));
+            }
+            placeholder
         } else {
             let lines_len = self.lines().len();
             let lnum_len = num_digits(lines_len);
