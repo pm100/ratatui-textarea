@@ -195,7 +195,7 @@ fn main() -> io::Result<()> {
                 .constraints(vec![Constraint::Percentage(50); 2])
                 .split(main_area);
 
-            let rows_per_col = (n + 1) / 2;
+            let rows_per_col = n.div_ceil(2);
             let row_constraint =
                 vec![Constraint::Percentage(100 / rows_per_col as u16); rows_per_col];
 
